@@ -1,0 +1,31 @@
+/*GENEAL STRUCTURE*/
+html{
+	margin-top:0!important;
+	overflow-y: hidden !important;
+}
+html.wait, html.wait * { cursor: wait !important; }
+body{
+	overflow: hidden;
+}
+body.body_blank.admin-bar{
+	top:0px!important;
+}
+img{
+	margin:auto;
+}
+#wpadminbar{
+	display:none;
+}
+
+#wrapper{
+	max-width:100%!important;
+}
+#main{
+	padding:0!important;
+}
+html, body, #wrapper, #main, .fusion-row, #content, .page, .post-content, #yourForm, .page-table, .page-row, .main, #map1{
+	height: 100%;
+}
+#map1{
+	width:100%;
+}
