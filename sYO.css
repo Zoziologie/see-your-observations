@@ -29,3 +29,14 @@ html, body, #wrapper, #main, .fusion-row, #content, .page, .post-content, #yourF
 #map1{
 	width:100%;
 }
+
+
+
+/*ICON*/
+.marker-cluster{
+	margin-left: -20px;
+    margin-top: -20px;	
+    width: 40px; 
+    height: 40px;
+}
+
