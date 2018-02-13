@@ -23,12 +23,60 @@ img{
 #main{
 	padding:0!important;
 }
-html, body, #wrapper, #main, .fusion-row, #content, .page, .post-content, #yourForm, .page-table, .page-row, .main, #map1{
+html, body, #wrapper, #main, .fusion-row, #content, .page, .post-content, #yourForm, .page-table, .page-row, .main{
 	height: 100%;
 }
-#map1{
-	width:100%;
+.fill { 
+    min-height: 100%;
+    height: 100%;
 }
+.box {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+.box .content {
+  flex: 1 1 auto;
+}
+.box .footer {
+  /*flex: 0 1 150px;*/
+   width: 100%;
+  background-color: #2A3A4D;
+  color: #92E9FF;
+  font-size: 17px;
+}
+#col-top-line{
+	border-bottom: 1px solid white;
+    padding: 10px 0px 0px 0px;
+}
+.popover {
+    max-width: 500px !important;
+    width: 500px; 
+}
+
+/**/
+#stattitle{
+	color:white;
+	font-size: 25px;
+}
+#chCount, #obsCount,#spCount{
+    line-height: 32px;
+    font-size: 35px;
+    font-weight: bold;
+    padding: 10px;
+}
+.count{
+    padding: 20px;
+    text-align: center;
+ }
+#count-ch, #count-sp{
+	color:inherit;
+	text-decoration:none;
+}
+#count-ch:hover, #count-sp:hover{
+	color:#1a80b6;
+}
+
 
 
 

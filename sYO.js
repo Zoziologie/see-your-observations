@@ -1,47 +1,43 @@
-var data,fields,loc,editableLayers, makersList, makersObs, makersSpe
+var loc, processed=true
 
 jQuery(document).ready(function() {
 
-		//Create map   
-		map = new L.Map('map1');
-
-	// Initiate the map
+	//Create map   
+	map = new L.Map('map1');
 	//map.setView(L.latLng(46.57591, 7.84956), 8);
-	map.fitWorld();
-
-	// Add tileLayer:
+	map.fitWorld().zoomIn();
 	baseLayers = {
 		'MapBox': L.tileLayer.provider('MapBox', {id: 'rafnuss.npl3amec',accessToken: token.mapbox}).addTo(map),
 		'OpenStreetMap': L.tileLayer.provider('OpenStreetMap.Mapnik'),
 	};
-
 	control = L.control.layers(baseLayers, null, { collapsed: false	}).addTo(map);
-
 	L.MakiMarkers.accessToken = token.mapbox;
+
+
+	jQuery('#ModalUpload').modal("toggle") //open modal as entrance page.
 
 	L.easyButton( 'fa-upload', function(){
 		jQuery('#ModalUpload').modal("toggle")
 	}).addTo(map);
-
-
 	jQuery("#uploadMyEBirdData").change(function(evt) {
-		processFile( evt.target.files[0], evt.target.files[0].size )
+		if (processed){
+			processFile( evt.target.files[0], evt.target.files[0].size )
+		}
 	});
 
 
 	// Open my data if me in url
-	jQuery('#ModalUpload').modal("toggle")
 	if ( window.location.search.substring(1).indexOf('me') !== -1 ){
 		jQuery.get("https://zoziologie.raphaelnussbaumer.com/wp-content/plugins/SeeYourObservations/MyEBirdData.csv", function(data){
-			processFile(data, data.length) 
+			if (processed){
+				processFile(data, data.length) 
+			}
 		})
-		//processFile( "https://zoziologie.raphaelnussbaumer.com/wp-content/plugins/SeeYourObservations/MyEBirdData.csv", true )
 	}
 
 	// Drawing
 	editableLayers = new L.FeatureGroup();
 	map.addLayer(editableLayers);
-
 	var drawControl = new L.Control.Draw({
 		position: 'topright',
 		draw: {
@@ -58,37 +54,39 @@ jQuery(document).ready(function() {
 	map.addControl(drawControl);
 	
 	map.on(L.Draw.Event.CREATED, function (e) {
-		
-		var type = e.layerType,
-		layer = e.layer;
-		txt='';
-		cl=0;
+
+		jQuery('#stattitle').html('Custum polygon')
+
+		list=[];
 		makersList.eachLayer(function(m){
-			if (leafletPip.pointInLayer(m.getLatLng(), L.geoJSON(layer.toGeoJSON())).length>0){
-				cl+=1;
+			if (leafletPip.pointInLayer(m.getLatLng(), L.geoJSON(e.layer.toGeoJSON())).length>0){
+				list = list.concat(m.List);
 			}
 		});
-		txt += numberWithCommas(cl) +' lists<br>'
+		jQuery('#chCount').html(numberWithCommas(list.length))
+		jQuery('#count-ch').attr('data-content', list.map( id => '<a href="https://ebird.org/view/checklist/'+id+'" target="_blank">'+id+'</a>' ).join(", "))
+
 		cl=0;
 		makersObs.eachLayer(function(m){
-			if (leafletPip.pointInLayer(m.getLatLng(), L.geoJSON(layer.toGeoJSON())).length>0){
+			if (leafletPip.pointInLayer(m.getLatLng(), L.geoJSON(e.layer.toGeoJSON())).length>0){
 				cl += m.count;
 			}
 		});
-		txt += numberWithCommas(cl) +' observations<br>'
+		jQuery('#obsCount').html(numberWithCommas(cl))
+
 		var sp= new Set()
 		makersSpe.eachLayer(function(m){
-			if (leafletPip.pointInLayer(m.getLatLng(), L.geoJSON(layer.toGeoJSON())).length>0){
+			if (leafletPip.pointInLayer(m.getLatLng(), L.geoJSON(e.layer.toGeoJSON())).length>0){
 				m.spe.forEach(s => sp.add(s) );
 			}
 		});
-		txt += numberWithCommas(sp.size) +' species<br>'
-		layer.bindPopup(txt);
+		jQuery('#spCount').html(numberWithCommas(sp.size))
+		let spa = Array.from(sp);
+		jQuery('#count-sp').attr('data-content', spa.join(', '))
+
 		editableLayers.clearLayers();
-		editableLayers.addLayer(layer);
-		layer.openPopup();
+		editableLayers.addLayer(e.layer);
 	});
-	
 })
 
 
@@ -100,11 +98,14 @@ function processFile( file, size ){
 	jQuery('#MyPg').show()
 	jQuery('#loadingtitle').html('Reading the file...')
 	var pgbar = document.getElementById("MyPgBar");
-	//map.spin(true);
 	Papa.parse(file, {
 		header:true,
 		step: function(row,handler) {
-			data.push(row.data[0]);
+			if ( row.data[0]['Common Name'] != undefined  && row.data[0]['Common Name'].indexOf('hybrid')<0 && row.data[0]['Common Name'].indexOf('/')<0 && row.data[0]['Common Name'].indexOf('sp.')<0 ){
+				data.push(row.data[0]);
+			} else{
+				console.log(row.data[0]['Common Name'])
+			}
 			progress = progress + Object.values(row.data[0]).join(',').length;
 
 			var newPercent = Math.round(progress / size * 100);
@@ -119,6 +120,16 @@ function processFile( file, size ){
 		complete: function() {
 			//data = results.data;
 			//fields = results.meta.fields;
+			processed=false
+
+			var checklists = data.reduce( (acc, cur) =>  acc.indexOf(cur['Submission ID'])<0 ? acc.concat(cur['Submission ID']) : acc , [] )
+			var species = data.reduce( (acc, cur) =>  acc.indexOf(cur['Common Name'])<0 ? acc.concat(cur['Common Name']) : acc , [] )
+			jQuery('#spCount').html(numberWithCommas(species.length))
+			jQuery('#obsCount').html(numberWithCommas(data.length))
+			jQuery('#chCount').html(numberWithCommas(checklists.length))
+			jQuery('#count-sp').attr('data-content', species.join(', '))
+			jQuery('#count-ch').attr('data-content', checklists.map( id => '<a href="https://ebird.org/view/checklist/'+id+'" target="_blank">'+id+'</a>' ).join(", "))
+
 			jQuery('#ModalUpload').modal("hide");
 			map.spin(true);
 			setTimeout(function(){
@@ -127,12 +138,12 @@ function processFile( file, size ){
 					d.Location = d_tmp.Location;
 					d.Latitude = d_tmp.Latitude;
 					d.Longitude = d_tmp.Longitude;
+					d.region = d_tmp['State/Province'];
 					return d
 				})
 
 				loc = loc_all.filter((loc_tmp, index, self) => self.findIndex(d => d.Location === loc_tmp.Location && (typeof d.Location != 'undefined') ) === index)
-
-
+				
 				loc = loc.map(function(loc_tmp){
 					d_loc = data.filter(d => d.Location==loc_tmp.Location);
 					loc_tmp.countObs = d_loc.length;
@@ -143,7 +154,7 @@ function processFile( file, size ){
 					return loc_tmp
 				})
 
-
+				//var region = loc.reduce( (acc, cur) =>  acc.indexOf(cur.region)<0 ? acc.concat(cur.region) : acc , [] )
 				//control.addOverlay(L.heatLayer(	loc.map(l => [parseFloat(l.Latitude), parseFloat(l.Longitude), l.countObs]))).addTo(map)
 				//control.addOverlay(L.heatLayer(	loc.map(l => [parseFloat(l.Latitude), parseFloat(l.Longitude), l.countSpe])).addTo(map))
 				//control.addOverlay(L.heatLayer(	loc.map(l => [parseFloat(l.Latitude), parseFloat(l.Longitude), l.countList])).addTo(map))
@@ -198,20 +209,21 @@ function processFile( file, size ){
 				});
 
 				loc.forEach(function(l){
-					pop = '<b>'+l.Location +'</b><br><b>Species:</b> '+ l.Spe.join(', ')+'<br><b>Checklists:</b> '+l.List.map( id => '<a href="https://ebird.org/view/checklist/'+id+'" target="_blank">'+id+'</a>' ).join(", ");
+					//pop = '<b>'+l.Location +'</b><br><b>Species:</b> '+ l.Spe.join(', ')+'<br><b>Checklists:</b> '+l.List.map( id => '<a href="https://ebird.org/view/checklist/'+id+'" target="_blank">'+id+'</a>' ).join(", ");
 					var mList = L.marker([parseFloat(l.Latitude), parseFloat(l.Longitude)],{
 						icon:L.MakiMarkers.icon({
 							icon: l.countList < 100  ? l.countList : (l.countList < 1000 ? 'c' : 'k' ),
 						})
-					}).bindPopup(pop)
+					}).on('click', function(e){footerfill(e, l)});
 					mList.count = l.countList;
 					mList.location = l.Location
+					mList.List = l.List;
 					makersList.addLayer(mList);
 					var mObs = L.marker([parseFloat(l.Latitude), parseFloat(l.Longitude)],{
 						icon:L.MakiMarkers.icon({
 							icon: l.countObs < 100  ? l.countObs : (l.countObs < 1000 ? 'c' : 'k' )
 						})
-					}).bindPopup(pop)
+					}).on('click', function(e){footerfill(e, l)});
 					mObs.count = l.countObs;
 					mObs.location = l.Location
 					makersObs.addLayer(mObs);
@@ -219,19 +231,13 @@ function processFile( file, size ){
 						icon:L.MakiMarkers.icon({
 							icon: l.countSpe < 100  ? l.countSpe : (l.countSpe < 1000 ? 'c' : 'k' )
 						})
-					}).bindPopup(pop)
+					}).on('click', function(e){footerfill(e, l)});
 					mSpe.count = l.countSpe;
 					mSpe.spe = l.Spe;
 					mSpe.location = l.Location
 					makersSpe.addLayer(mSpe);
 				})
 
-				makersSpe.on('popupopen', ppp )
-				makersObs.on('popupopen', ppp )
-				makersList.on('popupopen', ppp )
-				/*
-				<a href="#" target="_blank">
-				*/
 
 				control.addOverlay(makersList,'Your Lists')
 				control.addOverlay(makersObs,'Your Observations')
@@ -248,32 +254,37 @@ const numberWithCommas = (x) => {
 	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
 }
 
-ppp = function(e) {
-	if (e.popup._source.hotspot == undefined){
-		var latLng = e.popup._source.getLatLng();
+footerfill = function(e, l){
+	if (e.target.hotspot == undefined){
+		var latLng = e.target.getLatLng();
 		jQuery.get('https://ebird.org/ws1.1/ref/hotspot/geo?lng='+latLng.lng+'&lat='+latLng.lat+'&dist=1&fmt=xml',function(data){
 			dd=JSON.parse(xml2json(data).replace('undefined',''))
-
-			e.popup._source.hotspot='';
+			e.target.hotspot='';
 			if (dd.response.result != null ){
 				if (dd.response.result.location.length>0){
-					ddd = dd.response.result.location.filter( val => val['loc-name'] == e.popup._source.location );
+					ddd = dd.response.result.location.filter( val => val['loc-name'] == e.target.location );
 					if (ddd.length>0) {
-						e.popup._source.hotspot = ddd[0]['loc-id'];
-	
+						e.target.hotspot = ddd[0]['loc-id'];
+
 					}
-				} else if ( dd.response.result.location['loc-name'] == e.popup._source.location ) {
-					e.popup._source.hotspot = dd.response.result.location['loc-id'];
+				} else if ( dd.response.result.location['loc-name'] == e.target.location ) {
+					e.target.hotspot = dd.response.result.location['loc-id'];
 				}
 			} 
 
-			if (e.popup._source.hotspot.length>0){
-				var pop = e.popup.getContent();
-				pop = pop.replace('<b>','<b><a href="https://ebird.org/hotspot/'+e.popup._source.hotspot+'" target="_blank">')
-				pop = pop.replace('</b>','</a></b>')
-				e.popup.setContent(pop)	
+			if (e.target.hotspot.length>0){
+				l.Location = l.Location+'<a href="https://ebird.org/hotspot/'+e.target.hotspot+'" target="_blank"><img style="padding-left: 10px;" title="eBird hotspot page" src="https://zoziologie.raphaelnussbaumer.com/wp-content/plugins/improvedBiolovisionVisualisation/hotspot-icon-hotspot.png"></a>';
+				jQuery('#stattitle').html(l.Location)
 			}
 
 		})
 	}
+
+	jQuery('#stattitle').html(l.Location)
+	jQuery('#spCount').html(numberWithCommas(l.countSpe))
+	jQuery('#chCount').html(numberWithCommas(l.countList))
+	jQuery('#obsCount').html(numberWithCommas(l.countObs))
+
+	jQuery('#count-sp').attr('data-content', l.Spe.join(', '))
+	jQuery('#count-ch').attr('data-content', l.List.map( id => '<a href="https://ebird.org/view/checklist/'+id+'" target="_blank">'+id+'</a>' ).join(", "))
 }
