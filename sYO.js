@@ -41,6 +41,18 @@ jQuery(document).ready(function() {
 	var drawControl = new L.Control.Draw({
 		position: 'topright',
 		draw: {
+			polygon: {
+				shapeOptions: {
+                    color: '#92E9FE',
+                    clickable: false
+                }
+			},
+			rectangle: {
+				shapeOptions: {
+                    color: '#92E9FE',
+                    clickable: false
+                }
+			},
 			polyline: false,
 			circlemarker: false,
 			circle: false,
@@ -102,6 +114,7 @@ function processFile( file, size ){
 		header:true,
 		step: function(row,handler) {
 			if ( row.data[0]['Common Name'] != undefined  && row.data[0]['Common Name'].indexOf('hybrid')<0 && row.data[0]['Common Name'].indexOf('/')<0 && row.data[0]['Common Name'].indexOf('sp.')<0 ){
+				row.data[0]['Common Name'] = row.data[0]['Common Name'].replace(/ *\([^)]*\) */g, "");
 				data.push(row.data[0]);
 			} else{
 				console.log(row.data[0]['Common Name'])
