@@ -25,16 +25,17 @@ jQuery(document).ready(function() {
 
 
 	jQuery("#uploadMyEBirdData").change(function(evt) {
-		jQuery('#ModalUpload').modal("hide");
-		processFile( evt.target.files[0], false )
+		processFile( evt.target.files[0], evt.target.files[0].size )
 	});
 
 
 	// Open my data if me in url
+	jQuery('#ModalUpload').modal("toggle")
 	if ( window.location.search.substring(1).indexOf('me') !== -1 ){
-		processFile( "https://zoziologie.raphaelnussbaumer.com/wp-content/plugins/SeeYourObservations/MyEBirdData.csv", true )
-	} else {
-		jQuery('#ModalUpload').modal("toggle")
+		jQuery.get("https://zoziologie.raphaelnussbaumer.com/wp-content/plugins/SeeYourObservations/MyEBirdData.csv", function(data){
+			processFile(data, data.length) 
+		})
+		//processFile( "https://zoziologie.raphaelnussbaumer.com/wp-content/plugins/SeeYourObservations/MyEBirdData.csv", true )
 	}
 
 	// Drawing
@@ -44,21 +45,6 @@ jQuery(document).ready(function() {
 	var drawControl = new L.Control.Draw({
 		position: 'topright',
 		draw: {
-			polygon: {
-				allowIntersection: false, // Restricts shapes to simple polygons
-				drawError: {
-					color: '#e1e100', // Color the shape will turn when intersects
-					message: '<strong>Oh snap!<strong> you can\'t draw that!' // Message that will show when intersect
-				},
-				shapeOptions: {
-					color: '#bada55'
-				}
-			},
-			rectangle: {
-				shapeOptions: {
-					clickable: false
-				}
-			},
 			polyline: false,
 			circlemarker: false,
 			circle: false,
@@ -73,13 +59,8 @@ jQuery(document).ready(function() {
 	
 	map.on(L.Draw.Event.CREATED, function (e) {
 		
-
 		var type = e.layerType,
 		layer = e.layer;
-
-		/*if (type === 'rectangle') {
-			layer.bindPopup('A popup!');
-		}*/
 		txt='';
 		cl=0;
 		makersList.eachLayer(function(m){
@@ -112,19 +93,36 @@ jQuery(document).ready(function() {
 
 
 
-function processFile( file, download ){
-	map.spin(true);
+function processFile( file, size ){
+	var percent = 0;
+	var progress = 0;
+	const data = [];
+	jQuery('#MyPg').show()
+	jQuery('#loadingtitle').html('Reading the file...')
+	var pgbar = document.getElementById("MyPgBar");
+	//map.spin(true);
 	Papa.parse(file, {
 		header:true,
-		download: download,
-		complete: function(results) {
+		step: function(row,handler) {
+			data.push(row.data[0]);
+			progress = progress + Object.values(row.data[0]).join(',').length;
 
-			data = results.data;
-			fields = results.meta.fields;
+			var newPercent = Math.round(progress / size * 100);
+			if (newPercent === percent) return;
+			percent = newPercent;
+			handler.pause();
 
-				//var obj = jQuery.grep(data, function(obj){return obj.id === 3;})[0];
-
-				var loc_all = data.map(function(d_tmp){
+			pgbar.style.width = percent + '%'; 
+			pgbar.innerHTML = percent * 1  + '%';
+			setTimeout(function(){handler.resume()},0)
+		},
+		complete: function() {
+			//data = results.data;
+			//fields = results.meta.fields;
+			jQuery('#ModalUpload').modal("hide");
+			map.spin(true);
+			setTimeout(function(){
+				loc_all = data.map(function(d_tmp){
 					d={};
 					d.Location = d_tmp.Location;
 					d.Latitude = d_tmp.Latitude;
@@ -134,7 +132,6 @@ function processFile( file, download ){
 
 				loc = loc_all.filter((loc_tmp, index, self) => self.findIndex(d => d.Location === loc_tmp.Location && (typeof d.Location != 'undefined') ) === index)
 
-				//var tmp3 = data.map(val => val.Location)
 
 				loc = loc.map(function(loc_tmp){
 					d_loc = data.filter(d => d.Location==loc_tmp.Location);
@@ -146,11 +143,11 @@ function processFile( file, download ){
 					return loc_tmp
 				})
 
-				
-				//control.addOverlay(L.heatLayer(loc.map(l => [parseFloat(l.Latitude), parseFloat(l.Longitude), l.countObs]))).addTo(map)
+
+				//control.addOverlay(L.heatLayer(	loc.map(l => [parseFloat(l.Latitude), parseFloat(l.Longitude), l.countObs]))).addTo(map)
 				//control.addOverlay(L.heatLayer(	loc.map(l => [parseFloat(l.Latitude), parseFloat(l.Longitude), l.countSpe])).addTo(map))
 				//control.addOverlay(L.heatLayer(	loc.map(l => [parseFloat(l.Latitude), parseFloat(l.Longitude), l.countList])).addTo(map))
-				
+
 
 				makersList = L.markerClusterGroup({
 					showCoverageOnHover:0,
@@ -199,7 +196,7 @@ function processFile( file, download ){
 						return divi
 					}
 				});
-				
+
 				loc.forEach(function(l){
 					pop = '<b>'+l.Location +'</b><br><b>Species:</b> '+ l.Spe.join(', ')+'<br><b>Checklists:</b> '+l.List.map( id => '<a href="https://ebird.org/view/checklist/'+id+'" target="_blank">'+id+'</a>' ).join(", ");
 					var mList = L.marker([parseFloat(l.Latitude), parseFloat(l.Longitude)],{
@@ -239,17 +236,15 @@ function processFile( file, download ){
 				control.addOverlay(makersObs,'Your Observations')
 				control.addOverlay(makersSpe.addTo(map),'Your Species')
 				map.fitBounds(makersSpe.getBounds());
-
 				map.spin(false);
-
-
+			},0)
 			},
 		});
 }
 
 
 const numberWithCommas = (x) => {
-  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
 }
 
 ppp = function(e) {

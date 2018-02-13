@@ -32,6 +32,27 @@ html, body, #wrapper, #main, .fusion-row, #content, .page, .post-content, #yourF
 
 
 
+/* PROGRESS BAR*/
+.progress{
+	float: inherit !important; 
+    width: inherit !important;
+    background-color: #eceeef !important;
+} 
+
+.progress-bar{
+	background-color: #0275d8 !important;
+	margin-bottom: inherit !important;
+	height: 30px !important;
+}
+#MyPg{
+    margin-top: 40px;
+}
+#MyPgBar{
+    width :0%;
+    line-height: 30px;
+    font-size: initial;
+}
+
 /*ICON*/
 .marker-cluster{
 	margin-left: -20px;
