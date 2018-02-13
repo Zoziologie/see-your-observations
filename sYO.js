@@ -226,9 +226,10 @@ function processFile( file, size ){
 					makersSpe.addLayer(mSpe);
 				})
 
-				/*makersSpe.on('popupopen', ppp(e) )
-				makersObs.on('popupopen', ppp(e) )
-				makersList.on('popupopen', ppp(e) )
+				makersSpe.on('popupopen', ppp )
+				makersObs.on('popupopen', ppp )
+				makersList.on('popupopen', ppp )
+				/*
 				<a href="#" target="_blank">
 				*/
 
@@ -248,23 +249,31 @@ const numberWithCommas = (x) => {
 }
 
 ppp = function(e) {
-	var latLng = e.popup._source.getLatLng();
-	jQuery.get('https://ebird.org/ws1.1/ref/hotspot/geo?lng='+latLng.lng+'&lat='+latLng.lat+'&dist=1&fmt=xml',function(data){
-		dd=JSON.parse(xml2json(data).replace('undefined',''))
+	if (e.popup._source.hotspot == undefined){
+		var latLng = e.popup._source.getLatLng();
+		jQuery.get('https://ebird.org/ws1.1/ref/hotspot/geo?lng='+latLng.lng+'&lat='+latLng.lat+'&dist=1&fmt=xml',function(data){
+			dd=JSON.parse(xml2json(data).replace('undefined',''))
 
-		var locID='';
-		if (dd.response.result != null ){
-			var pop = e.popup.getContent();
-			if (dd.response.result.location.length>0){
-				ddd = dd.response.result.location.filter( val => val['loc-name'] == e.popup._source.location );
-				if (ddd.length>0) {
-					pop = pop.replace('#','https://ebird.org/hotspot/'+ddd[0]['loc-id'])
-					e.popup.setContent(pop)
+			e.popup._source.hotspot='';
+			if (dd.response.result != null ){
+				if (dd.response.result.location.length>0){
+					ddd = dd.response.result.location.filter( val => val['loc-name'] == e.popup._source.location );
+					if (ddd.length>0) {
+						e.popup._source.hotspot = ddd[0]['loc-id'];
+	
+					}
+				} else if ( dd.response.result.location['loc-name'] == e.popup._source.location ) {
+					e.popup._source.hotspot = dd.response.result.location['loc-id'];
 				}
-			} else if ( dd.response.result.location['loc-name'] == e.popup._source.location ) {
-				pop = pop.replace('#','https://ebird.org/hotspot/'+dd.response.result.location['loc-id']);
-				e.popup.setContent(pop)
+			} 
+
+			if (e.popup._source.hotspot.length>0){
+				var pop = e.popup.getContent();
+				pop = pop.replace('<b>','<b><a href="https://ebird.org/hotspot/'+e.popup._source.hotspot+'" target="_blank">')
+				pop = pop.replace('</b>','</a></b>')
+				e.popup.setContent(pop)	
 			}
-		}
-	})
+
+		})
+	}
 }
