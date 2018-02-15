@@ -1,7 +1,8 @@
 var loc, processed=true
 
 jQuery(document).ready(function() {
-
+	jQuery('#avada-stylesheet-inline-css').remove()
+	jQuery('#avada-stylesheet-css').remove()
 	//Create map   
 	map = new L.Map('map1');
 	//map.setView(L.latLng(46.57591, 7.84956), 8);
@@ -43,15 +44,15 @@ jQuery(document).ready(function() {
 		draw: {
 			polygon: {
 				shapeOptions: {
-                    color: '#92E9FE',
-                    clickable: false
-                }
+					color: '#92E9FE',
+					clickable: false
+				}
 			},
 			rectangle: {
 				shapeOptions: {
-                    color: '#92E9FE',
-                    clickable: false
-                }
+					color: '#92E9FE',
+					clickable: false
+				}
 			},
 			polyline: false,
 			circlemarker: false,
@@ -157,6 +158,9 @@ function processFile( file, size ){
 
 				loc = loc_all.filter((loc_tmp, index, self) => self.findIndex(d => d.Location === loc_tmp.Location && (typeof d.Location != 'undefined') ) === index)
 				
+				
+
+				
 				loc = loc.map(function(loc_tmp){
 					d_loc = data.filter(d => d.Location==loc_tmp.Location);
 					loc_tmp.countObs = d_loc.length;
@@ -174,7 +178,7 @@ function processFile( file, size ){
 
 
 				makersList = L.markerClusterGroup({
-					showCoverageOnHover:0,
+					//showCoverageOnHover:0,
 					iconCreateFunction: function(e){
 						var t=e.getAllChildMarkers().reduce( (c,m) => c+m.count,0)
 						var i=" marker-cluster-"
@@ -189,7 +193,7 @@ function processFile( file, size ){
 					}
 				});
 				makersObs = L.markerClusterGroup({
-					showCoverageOnHover:0,
+					//showCoverageOnHover:0,
 					iconCreateFunction: function(e){
 						var t=e.getAllChildMarkers().reduce( (c,m) => c+m.count,0)
 						var i=" marker-cluster-"
@@ -204,7 +208,7 @@ function processFile( file, size ){
 					}
 				});
 				makersSpe = L.markerClusterGroup({
-					showCoverageOnHover:0,
+					//showCoverageOnHover:0,
 					iconCreateFunction: function(e){
 						var sp= new Set()
 						e.getAllChildMarkers().forEach( m => m.spe.forEach(s => sp.add(s) ) )
@@ -258,8 +262,8 @@ function processFile( file, size ){
 				map.fitBounds(makersSpe.getBounds());
 				map.spin(false);
 			},0)
-			},
-		});
+},
+});
 }
 
 
@@ -270,20 +274,14 @@ const numberWithCommas = (x) => {
 footerfill = function(e, l){
 	if (e.target.hotspot == undefined){
 		var latLng = e.target.getLatLng();
-		jQuery.get('https://ebird.org/ws1.1/ref/hotspot/geo?lng='+latLng.lng+'&lat='+latLng.lat+'&dist=1&fmt=xml',function(data){
-			dd=JSON.parse(xml2json(data).replace('undefined',''))
+		jQuery.get('https://ebird.org/ws2.0/ref/hotspot/geo?lng='+latLng.lng+'&lat='+latLng.lat+'&dist=1&fmt=json&key='+token.ebird ,function(dd){
 			e.target.hotspot='';
-			if (dd.response.result != null ){
-				if (dd.response.result.location.length>0){
-					ddd = dd.response.result.location.filter( val => val['loc-name'] == e.target.location );
-					if (ddd.length>0) {
-						e.target.hotspot = ddd[0]['loc-id'];
-
-					}
-				} else if ( dd.response.result.location['loc-name'] == e.target.location ) {
-					e.target.hotspot = dd.response.result.location['loc-id'];
+			if (dd.length>0){
+				ddd = dd.filter( val => val.locName == e.target.location );
+				if (ddd.length>0) {
+					e.target.hotspot = ddd[0].locId;
 				}
-			} 
+			}
 
 			if (e.target.hotspot.length>0){
 				l.Location = l.Location+'<a href="https://ebird.org/hotspot/'+e.target.hotspot+'" target="_blank"><img style="padding-left: 10px;" title="eBird hotspot page" src="https://zoziologie.raphaelnussbaumer.com/wp-content/plugins/improvedBiolovisionVisualisation/hotspot-icon-hotspot.png"></a>';
