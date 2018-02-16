@@ -1,7 +1,8 @@
 # SeeYourObservations
-html, css and js code for the [demo page](https://zoziologie.raphaelnussbaumer.com/see-your-observations/).
+Visualize all your eBird observations on a map!
 
-![capture ecran](https://zoziologie.raphaelnussbaumer.com/wp-content/uploads/2018/02/Capture3.png)
+[DEMO](https://zoziologie.raphaelnussbaumer.com/see-your-observations/).
 
+[<img src="https://zoziologie.raphaelnussbaumer.com/wp-content/uploads/2018/02/Capture3.png">](https://zoziologie.raphaelnussbaumer.com/see-your-observations/)
 
 
