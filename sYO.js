@@ -68,7 +68,7 @@ jQuery(document).ready(function() {
 	
 	map.on(L.Draw.Event.CREATED, function (e) {
 
-		jQuery('#stattitle').html('Custum polygon')
+		jQuery('#stattitle').html('Custom polygon')
 
 		list=[];
 		makersList.eachLayer(function(m){
@@ -157,9 +157,6 @@ function processFile( file, size ){
 				})
 
 				loc = loc_all.filter((loc_tmp, index, self) => self.findIndex(d => d.Location === loc_tmp.Location && (typeof d.Location != 'undefined') ) === index)
-				
-				
-
 				
 				loc = loc.map(function(loc_tmp){
 					d_loc = data.filter(d => d.Location==loc_tmp.Location);
