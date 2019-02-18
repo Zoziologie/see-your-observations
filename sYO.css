@@ -1,5 +1,5 @@
 /*GENEAL STRUCTURE*/
-html{
+/*html{
 	margin-top:0!important;
 	overflow-y: hidden !important;
 }
@@ -22,10 +22,16 @@ img{
 }
 #main{
 	padding:0!important;
-}
-html, body, #wrapper, #main, .fusion-row, #content, .page, .post-content, #yourForm, .page-table, .page-row, .main{
+}*/
+html, body, .initial-content{
 	height: 100%;
 }
+.page__footer{
+	display:none;
+}
+
+
+
 .rich-snippet-hidden{
 	display:none;
 }

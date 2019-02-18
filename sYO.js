@@ -1,8 +1,8 @@
 var loc, processed=true
 
 jQuery(document).ready(function() {
-	jQuery('#avada-stylesheet-inline-css').remove()
-	jQuery('#avada-stylesheet-css').remove()
+
+
 	//Create map   
 	map = new L.Map('map1');
 	//map.setView(L.latLng(46.57591, 7.84956), 8);
