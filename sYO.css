@@ -1,38 +1,8 @@
 /*GENEAL STRUCTURE*/
-/*html{
-	margin-top:0!important;
-	overflow-y: hidden !important;
-}
-html.wait, html.wait * { cursor: wait !important; }
-body{
-	overflow: hidden;
-}
-body.body_blank.admin-bar{
-	top:0px!important;
-}
-img{
-	margin:auto;
-}
-#wpadminbar{
-	display:none;
-}
-
-#wrapper{
-	max-width:100%!important;
-}
-#main{
-	padding:0!important;
-}*/
 html, body, .initial-content{
 	height: 100%;
 }
 .page__footer{
-	display:none;
-}
-
-
-
-.rich-snippet-hidden{
 	display:none;
 }
 .fill { 
@@ -118,3 +88,22 @@ html, body, .initial-content{
 	height: 40px;
 }
 
+.dnwlo-btn:visited{
+	color:white;
+}
+.modal{
+	margin-left: initial;
+	margin-top: initial;
+	background: initial;
+	border: none;
+}
+.leaflet-control-layers-selector {
+    display: initial;
+    box-shadow:none;
+}
+.leaflet-container {
+    font: inherit;
+}
+.icon-bottom{
+	vertical-align: initial;
+}

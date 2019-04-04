@@ -1,3 +1,26 @@
+---
+layout: blank
+permalink: /See-Your-Observations/
+
+plugins: 
+ - SeeYourObservations
+ - token
+ - jQuery
+ - Bootstrap
+ - Leaflet
+ - Leaflet.draw
+ - Leaflet.MakiMarker
+ - leaflet-pip
+ - Leaflet.markercluster
+ - leaflet-easybutton
+ - font-awesome
+ - leaflet.spin
+ - papaparse
+ - leaflet-providers
+ - spin.js
+ - popper.js
+---
+
 <div class="box">
 	<div class="content" id="map1"></div>
 	<div class="footer">
@@ -6,9 +29,9 @@
 				<div class="col-xs" id="col-top-line"><span id="stattitle">World</span></div>
 			</div>
 			<div class="row">
-				<div class="col-sm count"><a id="count-sp" href="#" data-html="true" data-toggle="popover" data-placement="top" data-content="Content" data-trigger="focus" title="List of species"><img src="https://zoziologie.raphaelnussbaumer.com/wp-content/uploads/2018/02/bird-albatross-flying-shape-2.png"><span id="spCount">-</span><br>Species observed</a></div>
-				<div class="col-sm count"> <a id="count-ch" href="#" data-html="true" data-toggle="popover" data-placement="top" data-content="Content" data-trigger="focus" title="List of checklists"><img src="https://zoziologie.raphaelnussbaumer.com/wp-content/uploads/2018/02/list.png"><span id="chCount">-</span><br>Checklists</a></div>
-				<div class="col-sm count"><img src="https://zoziologie.raphaelnussbaumer.com/wp-content/uploads/2018/02/binoculars-silhouette.png"><span id="obsCount">-</span><br>Observations</div>
+				<div class="col-sm count"><a id="count-sp" href="#" data-html="true" data-toggle="popover" data-placement="top" data-content="Content" data-trigger="focus" title="List of species"><img class="icon-bottom" src="{{site.baseurl}}/assets/SeeYourObservations/images/bird-albatross-flying-shape-2.png"><span id="spCount">-</span><br>Species observed</a></div>
+				<div class="col-sm count"> <a id="count-ch" href="#" data-html="true" data-toggle="popover" data-placement="top" data-content="Content" data-trigger="focus" title="List of checklists"><img class="icon-bottom" src="{{site.baseurl}}/assets/SeeYourObservations/images/list.png"><span id="chCount">-</span><br>Checklists</a></div>
+				<div class="col-sm count"><img class="icon-bottom" src="{{site.baseurl}}/assets/SeeYourObservations/images/binoculars-silhouette.png"><span id="obsCount">-</span><br>Observations</div>
 			</div>
 		</div>
 	</div>

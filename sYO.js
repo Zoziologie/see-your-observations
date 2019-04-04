@@ -27,14 +27,6 @@ jQuery(document).ready(function() {
 	});
 
 
-	// Open my data if me in url
-	if ( window.location.search.substring(1).indexOf('me') !== -1 ){
-		jQuery.get("https://zoziologie.raphaelnussbaumer.com/wp-content/plugins/SeeYourObservations/MyEBirdData.csv", function(data){
-			if (processed){
-				processFile(data, data.length) 
-			}
-		})
-	}
 
 	// Drawing
 	editableLayers = new L.FeatureGroup();
@@ -118,7 +110,7 @@ function processFile( file, size ){
 				row.data[0]['Common Name'] = row.data[0]['Common Name'].replace(/ *\([^)]*\) */g, "");
 				data.push(row.data[0]);
 			} else{
-				console.log(row.data[0]['Common Name'])
+				//console.log(row.data[0]['Common Name'])
 			}
 			progress = progress + Object.values(row.data[0]).join(',').length;
 
@@ -258,6 +250,7 @@ function processFile( file, size ){
 				control.addOverlay(makersSpe.addTo(map),'Your Species')
 				map.fitBounds(makersSpe.getBounds());
 				map.spin(false);
+				jQuery('[data-toggle="popover"]').popover()
 			},0)
 },
 });
@@ -281,7 +274,7 @@ footerfill = function(e, l){
 			}
 
 			if (e.target.hotspot.length>0){
-				l.Location = l.Location+'<a href="https://ebird.org/hotspot/'+e.target.hotspot+'" target="_blank"><img style="padding-left: 10px;" title="eBird hotspot page" src="https://zoziologie.raphaelnussbaumer.com/wp-content/plugins/improvedBiolovisionVisualisation/hotspot-icon-hotspot.png"></a>';
+				l.Location = l.Location+'<a href="https://ebird.org/hotspot/'+e.target.hotspot+'" target="_blank"><img style="padding-left: 10px;" title="eBird hotspot page" src="https://zoziologie.raphaelnussbaumer.com/assets/SeeYourObservations/images/hotspot-icon-hotspot.png"></a>';
 				jQuery('#stattitle').html(l.Location)
 			}
 
