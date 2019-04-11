@@ -60,7 +60,7 @@ jQuery(document).ready(function() {
 	
 	map.on(L.Draw.Event.CREATED, function (e) {
 
-		jQuery('#stattitle').html('Custom polygon')
+		jQuery('#stattitle').html('<span id="stattitle-name">CUSTOM SHAPE</span>')
 
 		list=[];
 		makersList.eachLayer(function(m){
@@ -274,14 +274,18 @@ footerfill = function(e, l){
 			}
 
 			if (e.target.hotspot.length>0){
-				l.Location = l.Location+'<a href="https://ebird.org/hotspot/'+e.target.hotspot+'" target="_blank"><img style="padding-left: 10px;" title="eBird hotspot page" src="https://zoziologie.raphaelnussbaumer.com/assets/SeeYourObservations/images/hotspot-icon-hotspot.png"></a>';
-				jQuery('#stattitle').html(l.Location)
+				//var txt ='<a href="https://ebird.org/hotspot/'+e.target.hotspot+'" target="_blank"><img class="img-hotspot" title="eBird hotspot page" src="https://zoziologie.raphaelnussbaumer.com/assets/SeeYourObservations/images/hotspot-icon-hotspot.png"></a>';
+				var txt ='<a href="https://ebird.org/hotspot/'+e.target.hotspot+'" target="_blank" id="stattitle-name">'+l.Location.toUpperCase()+'</a>';
+				txt += '<a href="https://ebird.org/targets?&r1='+e.target.hotspot+'" target="_blank" title="Your target list" class="stattitle-link"><i class="far fa-lg fa-dot-circle img-hotspot"></i> Target</a>'
+				txt += '<a href="https://ebird.org/MyEBird?cmd=list&r='+e.target.hotspot+'" target="_blank" title="Your exact list" class="stattitle-link"><i class="fas fa-lg fa-list img-hotspot"></i> List</a>'
+				jQuery('#stattitle').html(txt)
 			}
 
 		})
+	} else {
+		jQuery('#stattitle').html('<span id="stattitle-name">'+l.Location.toUpperCase()+'</span>')	
 	}
 
-	jQuery('#stattitle').html(l.Location)
 	jQuery('#spCount').html(numberWithCommas(l.countSpe))
 	jQuery('#chCount').html(numberWithCommas(l.countList))
 	jQuery('#obsCount').html(numberWithCommas(l.countObs))

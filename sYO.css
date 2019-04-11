@@ -25,7 +25,6 @@ html, body, .initial-content{
 	font-size: 17px;
 }
 #col-top-line{
-	border-bottom: 1px solid white;
 	padding: 10px 0px 0px 0px;
 }
 .popover {
@@ -34,9 +33,16 @@ html, body, .initial-content{
 }
 
 /**/
-#stattitle{
+.stattitle-link{
+	text-decoration: none !important;
+	color:white !important;
+}
+#stattitle-name{
 	color:white;
 	font-size: 25px;
+	font-weight: 700;
+	text-decoration: none;
+	border-bottom: 1px solid white;
 }
 #chCount, #obsCount,#spCount{
 	line-height: 32px;
@@ -55,7 +61,10 @@ html, body, .initial-content{
 #count-ch:hover, #count-sp:hover{
 	color:#1a80b6;
 }
-
+.img-hotspot{
+	padding-left: 10px;
+	vertical-align: text-top;
+}
 
 
 
@@ -88,7 +97,7 @@ html, body, .initial-content{
 	height: 40px;
 }
 
-.dnwlo-btn:visited{
+#dnwlo-btn:visited{
 	color:white;
 }
 .modal{
