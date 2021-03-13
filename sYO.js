@@ -8,7 +8,7 @@ jQuery(document).ready(function() {
 	//map.setView(L.latLng(46.57591, 7.84956), 8);
 	map.fitWorld().zoomIn();
 	baseLayers = {
-		'MapBox': L.tileLayer.provider('MapBox', {id: 'rafnuss.npl3amec',accessToken: token.mapbox}).addTo(map),
+		'MapBox': L.tileLayer.provider('MapBox', {id: 'mapbox/light-v10',accessToken: token.mapbox}).addTo(map),
 		'OpenStreetMap': L.tileLayer.provider('OpenStreetMap.Mapnik'),
 	};
 	control = L.control.layers(baseLayers, null, { collapsed: false	}).addTo(map);
