@@ -68,7 +68,7 @@ html, body, .initial-content{
 
 
 
-/* PROGRESS BAR*/
+/* PROGRESS BAR
 .progress{
 	float: inherit !important; 
 	width: inherit !important;
@@ -87,7 +87,7 @@ html, body, .initial-content{
 	width :0%;
 	line-height: 30px;
 	font-size: initial;
-}
+}*/
 
 /*ICON*/
 .marker-cluster{

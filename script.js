@@ -1,7 +1,6 @@
-var loc, processed=true
+var loc
 
 jQuery(document).ready(function() {
-
 
 	//Create map   
 	map = new L.Map('map1');
@@ -17,14 +16,19 @@ jQuery(document).ready(function() {
 
 	jQuery('#ModalUpload').modal("toggle") //open modal as entrance page.
 
-	L.easyButton( 'fa-upload', function(){
-		jQuery('#ModalUpload').modal("toggle")
-	}).addTo(map);
 	jQuery("#uploadMyEBirdData").change(function(evt) {
-		if (processed){
-			processFile( evt.target.files[0], evt.target.files[0].size )
-		}
+		processFile( evt.target.files[0], evt.target.files[0].size )
 	});
+
+	// Open my data if me in url
+	if ( window.location.search.substring(1).indexOf('me') !== -1 ){
+		map.spin(true);
+		//console.log('loading personal file')
+		jQuery.get("/assets/MyEBirdData.csv", function(data){
+			map.spin(false);
+			processFile(data, data.length) 
+		})
+	}
 
 
 
@@ -120,13 +124,12 @@ function processFile( file, size ){
 			handler.pause();
 
 			pgbar.style.width = percent + '%'; 
-			pgbar.innerHTML = percent * 1  + '%';
+			//pgbar.innerHTML = percent * 1  + '%';
 			setTimeout(function(){handler.resume()},0)
 		},
 		complete: function() {
 			//data = results.data;
 			//fields = results.meta.fields;
-			processed=false
 
 			var checklists = data.reduce( (acc, cur) =>  acc.indexOf(cur['Submission ID'])<0 ? acc.concat(cur['Submission ID']) : acc , [] )
 			var species = data.reduce( (acc, cur) =>  acc.indexOf(cur['Common Name'])<0 ? acc.concat(cur['Common Name']) : acc , [] )
