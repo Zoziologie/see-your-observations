@@ -1,0 +1,38 @@
+{
+  "name": "see-your-observations",
+  "version": "1.0.0",
+  "description": "Visualize all your eBird observations on a map!",
+  "main": "main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "convert-csv-to-json": "node scripts/convertCsvToJson.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zoziologie/see-your-observations.git"
+  },
+  "private": true,
+  "type": "module",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Zoziologie/see-your-observations/issues"
+  },
+  "homepage": "https://zoziologie.raphaelnussbaumer.com/see-your-observations/",
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "leaflet": "^1.9.4",
+    "sass": "^1.84.0",
+    "vite": "^6.1.0"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.3",
+    "csv-parser": "^3.2.0",
+    "leaflet-draw": "^1.0.4",
+    "leaflet.markercluster": "^1.5.3",
+    "papaparse": "^5.5.2",
+    "vue": "^3.3.0"
+  }
+}
