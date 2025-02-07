@@ -30,9 +30,9 @@
       </symbol>
     </svg>
     <div class="row flex-grow-1" id="map"></div>
-    <div class="row box px-5 py-3">
+    <div class="row box px-5 py-3 justify-content-center">
       <!-- loop through stat-->
-      <div class="col-sm" v-for="stat in stats" :key="stat.label">
+      <div class="col-sm text-center" v-for="stat in stats" :key="stat.label">
         <a
           class="d-inline-flex flex-column StatsIcon px-2"
           @click="
@@ -129,8 +129,11 @@ import Papa from "papaparse";
 import L from "leaflet";
 import "leaflet-draw";
 import "leaflet.markercluster";
+import "leaflet-easybutton";
 // Import all of Bootstrap's JS
 import * as bootstrap from "bootstrap";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "leaflet-easybutton/src/easy-button.css";
 
 import taxonomy from "./assets/eBird_taxonomy.json";
 const taxonomy_prim = taxonomy.reduce((acc, row) => {
@@ -149,6 +152,7 @@ export default {
       map: null,
       drawnPoly: null,
       markersLayer: null,
+      disableClusteringAtZoom: 20,
       modal: null,
       loading: false,
       error: null, // For displaying error messages
@@ -245,6 +249,29 @@ export default {
       this.updateCount();
     });
 
+    this.easyButton = L.easyButton({
+      states: [
+        {
+          stateName: "enable-clustering",
+          icon: "bi bi-record-circle",
+          title: "Enable Clustering",
+          onClick: (btn, map) => {
+            this.toggleClustering();
+            btn.state("disable-clustering");
+          },
+        },
+        {
+          stateName: "disable-clustering",
+          icon: "bi bi-record-fill",
+          title: "Disable Clustering",
+          onClick: (btn, map) => {
+            this.toggleClustering();
+            btn.state("enable-clustering");
+          },
+        },
+      ],
+    }).addTo(this.map);
+
     // Initialize the modal
     this.modal = new bootstrap.Modal(document.getElementById("modalImport"));
     this.modal.show();
@@ -252,6 +279,10 @@ export default {
   methods: {
     formatNumber(value) {
       return new Intl.NumberFormat().format(value);
+    },
+    toggleClustering() {
+      this.disableClusteringAtZoom = this.disableClusteringAtZoom === 20 ? 0 : 20;
+      this.updateMarkers();
     },
     handleFileUpload(event) {
       const file = event.target.files[0];
@@ -389,7 +420,12 @@ export default {
       this.updateMarkers();
     },
     updateMarkers() {
+      // clear layer from map
+      if (this.markersLayer) {
+        this.map.removeLayer(this.markersLayer);
+      }
       this.markersLayer = L.markerClusterGroup({
+        disableClusteringAtZoom: this.disableClusteringAtZoom,
         iconCreateFunction: (e) => {
           if (this.statSelected === "species") {
             const speciesSet = new Set();

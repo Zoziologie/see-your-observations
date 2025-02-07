@@ -48,3 +48,9 @@ body {
   width: 40px;
   height: 40px;
 }
+.easy-button-button .button-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%; /* Ensure it takes full button height */
+}

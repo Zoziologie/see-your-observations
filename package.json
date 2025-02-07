@@ -29,8 +29,10 @@
   "dependencies": {
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
     "csv-parser": "^3.2.0",
     "leaflet-draw": "^1.0.4",
+    "leaflet-easybutton": "^2.4.0",
     "leaflet.markercluster": "^1.5.3",
     "papaparse": "^5.5.2",
     "vue": "^3.3.0"
