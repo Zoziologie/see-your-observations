@@ -37,7 +37,7 @@
           class="d-inline-flex flex-column StatsIcon px-2"
           @click="
             statSelected = stat.name;
-            markersLayer.refreshClusters();
+            refreshClusters();
           "
         >
           <div class="d-inline-flex StatsIcon-stat">
@@ -52,6 +52,70 @@
           </div>
           <div class="StatsIcon-label">{{ stat.label }}</div>
         </a>
+      </div>
+      <div class="col-sm">
+        <div class="dropdown">
+          <button
+            class="btn btn-secondary dropdown-toggle"
+            type="button"
+            id="dropdownMenuButton"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            {{ clusteringType }}
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <li>
+              <a
+                class="dropdown-item"
+                href="#"
+                @click="
+                  clusteringType = 'all';
+                  updateMarkers();
+                "
+              >
+                Clustering
+              </a>
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="#"
+                @click="
+                  clusteringType = 'country';
+                  updateMarkers();
+                "
+              >
+                Clustering by Countries
+              </a>
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="#"
+                @click="
+                  clusteringType = 'region';
+                  updateMarkers();
+                "
+              >
+                Clustering by Regions
+              </a>
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="#"
+                @click="
+                  clusteringType = 'no';
+                  updateMarkers();
+                "
+              >
+                No Clustering
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -129,11 +193,9 @@ import Papa from "papaparse";
 import L from "leaflet";
 import "leaflet-draw";
 import "leaflet.markercluster";
-import "leaflet-easybutton";
 // Import all of Bootstrap's JS
 import * as bootstrap from "bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import "leaflet-easybutton/src/easy-button.css";
 
 import taxonomy from "./assets/eBird_taxonomy.json";
 const taxonomy_prim = taxonomy.reduce((acc, row) => {
@@ -149,14 +211,15 @@ const taxonomy_code = taxonomy.reduce((acc, row) => {
 export default {
   data() {
     return {
+      locations: [],
+      markers: [],
       map: null,
       drawnPoly: null,
       markersLayer: null,
-      disableClusteringAtZoom: 20,
+      clusteringType: "all",
       modal: null,
       loading: false,
       error: null, // For displaying error messages
-      locations: [],
       stats: [
         {
           name: "species",
@@ -249,29 +312,6 @@ export default {
       this.updateCount();
     });
 
-    this.easyButton = L.easyButton({
-      states: [
-        {
-          stateName: "enable-clustering",
-          icon: "bi bi-record-circle",
-          title: "Enable Clustering",
-          onClick: (btn, map) => {
-            this.toggleClustering();
-            btn.state("disable-clustering");
-          },
-        },
-        {
-          stateName: "disable-clustering",
-          icon: "bi bi-record-fill",
-          title: "Disable Clustering",
-          onClick: (btn, map) => {
-            this.toggleClustering();
-            btn.state("enable-clustering");
-          },
-        },
-      ],
-    }).addTo(this.map);
-
     // Initialize the modal
     this.modal = new bootstrap.Modal(document.getElementById("modalImport"));
     this.modal.show();
@@ -281,7 +321,7 @@ export default {
       return new Intl.NumberFormat().format(value);
     },
     toggleClustering() {
-      this.disableClusteringAtZoom = this.disableClusteringAtZoom === 20 ? 0 : 20;
+      this.disableClustering = !this.disableClustering;
       this.updateMarkers();
     },
     handleFileUpload(event) {
@@ -353,6 +393,7 @@ export default {
             location: row["Location"],
             latitude: parseFloat(row["Latitude"]),
             longitude: parseFloat(row["Longitude"]),
+            region: row["State/Province"],
           };
         })
         .filter((s) => s.category == "species")
@@ -367,6 +408,7 @@ export default {
             location: s.location,
             latitude: s.latitude,
             longitude: s.longitude,
+            region: s.region,
             nb_sightings: 0,
             species: {},
           };
@@ -387,6 +429,8 @@ export default {
             location: c.location,
             latitude: c.latitude,
             longitude: c.longitude,
+            region: c.region,
+            country: c.region.split("-")[0],
             checklists: [],
             nb_sightings: 0,
             species: {},
@@ -417,15 +461,40 @@ export default {
         s.sml = [s.value / 10, s.value / 3];
       });
 
+      this.createMarkers();
       this.updateMarkers();
     },
-    updateMarkers() {
-      // clear layer from map
-      if (this.markersLayer) {
-        this.map.removeLayer(this.markersLayer);
-      }
-      this.markersLayer = L.markerClusterGroup({
-        disableClusteringAtZoom: this.disableClusteringAtZoom,
+    createMarkers() {
+      // Add new markers with the selected property
+      this.markers = this.locations.map((locations) => {
+        const { latitude, longitude, location, locationID, checklists, species, nb_sightings } =
+          locations;
+
+        const speciesList = Object.entries(species)
+          .map(([name, count]) => ` ${count} ${name}`)
+          .join(",");
+        const checklistList = checklists
+          .map((c) => " <a href='https://ebird.org/checklist/" + c + "'>" + c + "</a>")
+          .join(", ");
+        const popupContent = `
+            <div>
+            <h5><a href="https://ebird.org/hotspot/${locationID}">${location}</a></h5>
+            <p><strong>Checklists:</strong>${checklistList}</p>
+            <p><strong>Species:</strong>${speciesList}</p>
+            </div>
+        `;
+        const marker = L.circleMarker([latitude, longitude]).bindPopup(popupContent);
+        marker.nb_sightings = nb_sightings;
+        marker.nb_checklists = checklists.length;
+        marker.species = Object.keys(species);
+        marker.nb_species = speciesList.length;
+        marker.region = locations["region"];
+        marker.country = locations["country"];
+        return marker;
+      });
+    },
+    generateDefaultCluster() {
+      return L.markerClusterGroup({
         iconCreateFunction: (e) => {
           if (this.statSelected === "species") {
             const speciesSet = new Set();
@@ -463,36 +532,59 @@ export default {
           });
         },
       });
+    },
+    updateMarkers() {
+      // clear layer from map
+      if (this.markersLayer) {
+        this.map.removeLayer(this.markersLayer);
+      }
+      if (this.clusteringType === "no") {
+        this.markersLayer = L.featureGroup();
+        this.markers.forEach((m) => this.markersLayer.addLayer(m));
+      } else if (this.clusteringType === "all") {
+        this.markersLayer = this.generateDefaultCluster();
+        this.markers.forEach((m) => this.markersLayer.addLayer(m));
+      } else if (this.clusteringType === "country") {
+        const countryClusters = {};
+        this.markers.forEach((m) => {
+          if (!countryClusters[m.country]) {
+            countryClusters[m.country] = this.generateDefaultCluster();
+            countryClusters[m.country].options.maxClusterRadius = 300;
+          }
+          countryClusters[m.country].addLayer(m);
+        });
+        this.markersLayer = L.featureGroup();
+        Object.values(countryClusters).forEach((cluster) => {
+          this.markersLayer.addLayer(cluster);
+        });
+      } else if (this.clusteringType === "region") {
+        const regionClusters = {};
+        this.markers.forEach((m) => {
+          if (!regionClusters[m.region]) {
+            regionClusters[m.region] = this.generateDefaultCluster();
+            regionClusters[m.region].options.maxClusterRadius = 300;
+          }
+          regionClusters[m.region].addLayer(m);
+        });
+        this.markersLayer = L.featureGroup();
+        Object.values(regionClusters).forEach((cluster) => {
+          this.markersLayer.addLayer(cluster);
+        });
+      }
 
-      // Add new markers with the selected property
-      this.locations.forEach((locations) => {
-        const { latitude, longitude, location, locationID, checklists, species, nb_sightings } =
-          locations;
-
-        if (latitude && longitude) {
-          const speciesList = Object.entries(species)
-            .map(([name, count]) => ` ${count} ${name}`)
-            .join(",");
-          const checklistList = checklists
-            .map((c) => " <a href='https://ebird.org/checklist/" + c + "'>" + c + "</a>")
-            .join(", ");
-          const popupContent = `
-            <div>
-            <h5><a href="https://ebird.org/hotspot/${locationID}">${location}</a></h5>
-            <p><strong>Checklists:</strong>${checklistList}</p>
-            <p><strong>Species:</strong>${speciesList}</p>
-            </div>
-        `;
-          const marker = L.circleMarker([latitude, longitude]).bindPopup(popupContent);
-          marker.nb_sightings = nb_sightings;
-          marker.nb_checklists = checklists.length;
-          marker.species = Object.keys(species);
-          marker.nb_species = speciesList.length;
-          this.markersLayer.addLayer(marker);
-        }
-      });
       this.map.addLayer(this.markersLayer);
       this.map.fitBounds(this.markersLayer.getBounds());
+    },
+    refreshClusters() {
+      if (this.markersLayer instanceof L.MarkerClusterGroup) {
+        this.markersLayer.refreshClusters();
+      } else if (this.markersLayer instanceof L.FeatureGroup) {
+        this.markersLayer.eachLayer((layer) => {
+          if (layer instanceof L.MarkerClusterGroup) {
+            layer.refreshClusters();
+          }
+        });
+      }
     },
     updateCount() {
       let selected;
