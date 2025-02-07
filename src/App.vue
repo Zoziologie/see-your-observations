@@ -33,7 +33,13 @@
     <div class="row box px-5 py-3">
       <!-- loop through stat-->
       <div class="col-sm" v-for="stat in stats" :key="stat.label">
-        <a class="d-inline-flex flex-column StatsIcon px-2">
+        <a
+          class="d-inline-flex flex-column StatsIcon px-2"
+          @click="
+            statSelected = stat.name;
+            markersLayer.refreshClusters();
+          "
+        >
           <div class="d-inline-flex StatsIcon-stat">
             <div class="d-inline-flex align-items-center StatsIcon-stat-icon">
               <svg class="Icon" :class="stat.icon" role="presentation">
@@ -142,28 +148,32 @@ export default {
     return {
       map: null,
       drawnPoly: null,
+      markersLayer: null,
       modal: null,
       loading: false,
       error: null, // For displaying error messages
       locations: [],
       stats: [
         {
+          name: "species",
           icon: "Icon--species",
           label: "Species Observed",
           value: 0,
         },
         {
+          name: "checklists",
           icon: "Icon--checklist",
           label: "Checklists",
           value: 0,
         },
         {
+          name: "sightings",
           icon: "Icon--check",
           label: "Observations",
           value: 0,
         },
       ],
-      markerValue: "nb_checklists",
+      statSelected: "checklists",
     };
   },
   mounted() {
@@ -303,11 +313,9 @@ export default {
           if (match2) {
             category = match2.CATEGORY;
           }
-
           return {
             checklistID: row["Submission ID"],
-            commonName: row["Common Name"],
-            speciesID: speciesID,
+            commonName: match2["PRIMARY_COM_NAME"],
             category: category,
             count: row["Count"] === "x" || row["Count"] === "X" ? 1 : parseFloat(row["Count"]),
             locationID: row["Location ID"],
@@ -316,7 +324,8 @@ export default {
             longitude: parseFloat(row["Longitude"]),
           };
         })
-        .filter((s) => s.category == "species");
+        .filter((s) => s.category == "species")
+        .filter((s) => s.count != 0);
 
       // Group sightings by checklists
       const checklists_obj = sightings.reduce((acc, s) => {
@@ -371,22 +380,46 @@ export default {
 
       this.locations = Object.values(locations_obj);
 
-      this.updateMarkers();
       this.updateCount();
+
+      this.stats.forEach((s) => {
+        s.sml = [s.value / 10, s.value / 3];
+      });
+
+      this.updateMarkers();
     },
     updateMarkers() {
-      // Clear existing markers
-      let markersLayer = L.markerClusterGroup({
+      this.markersLayer = L.markerClusterGroup({
         iconCreateFunction: (e) => {
-          var t = e.getAllChildMarkers().reduce((acc, m) => {
-            acc += m[this.markerValue];
-            console.log(m[this.markerValue]);
-            return acc;
-          }, 0);
+          if (this.statSelected === "species") {
+            const speciesSet = new Set();
+            e.getAllChildMarkers().forEach((m) => {
+              m.species.forEach((species) => speciesSet.add(species));
+            });
+            var t = speciesSet.size;
+          } else if (this.statSelected === "checklists") {
+            var t = e.getAllChildMarkers().reduce((acc, m) => {
+              acc += m.nb_checklists;
+              return acc;
+            }, 0);
+          } else {
+            var t = e.getAllChildMarkers().reduce((acc, m) => {
+              acc += m.nb_sightings;
+              return acc;
+            }, 0);
+          }
+
+          const selectedStat = this.stats.find((obj) => obj.name === this.statSelected);
 
           var i = " marker-cluster-";
-          i += 100 > t ? "small" : 500 > t ? "medium" : "large";
-          t = t < 1000 ? t : Math.round(t / 1000) + "K";
+          i += selectedStat.sml[0] > t ? "small" : selectedStat.sml[1] > t ? "medium" : "large";
+
+          t =
+            t < 1000
+              ? t
+              : t < 1_000_000
+              ? (t / 1000 < 10 ? (t / 1000).toFixed(1) : Math.round(t / 1000)) + "K"
+              : (t / 1_000_000 < 10 ? (t / 1_000_000).toFixed(1) : Math.round(t / 1_000_000)) + "M";
           return L.divIcon({
             html: "<div><span>" + t + "</span></div>",
             className: "marker-cluster" + i,
@@ -417,12 +450,13 @@ export default {
           const marker = L.circleMarker([latitude, longitude]).bindPopup(popupContent);
           marker.nb_sightings = nb_sightings;
           marker.nb_checklists = checklists.length;
-          marker.species = Object.values(species).reduce((a, b) => a + b);
-          markersLayer.addLayer(marker);
+          marker.species = Object.keys(species);
+          marker.nb_species = speciesList.length;
+          this.markersLayer.addLayer(marker);
         }
       });
-      this.map.addLayer(markersLayer);
-      this.map.fitBounds(markersLayer.getBounds());
+      this.map.addLayer(this.markersLayer);
+      this.map.fitBounds(this.markersLayer.getBounds());
     },
     updateCount() {
       let selected;
@@ -449,11 +483,6 @@ export default {
       this.stats[0].value = speciesSet.size; // Number of unique species
       this.stats[1].value = selected.reduce((acc, location) => acc + location.checklists.length, 0);
       this.stats[2].value = selected.reduce((acc, location) => acc + location.nb_sightings, 0);
-    },
-  },
-  watch: {
-    selectedProperty() {
-      this.updateMarkers(); // Update markers when the selected property changes
     },
   },
 };

@@ -20,6 +20,15 @@ body {
   border-inline-start-style: solid;
   font-size: 2rem;
   line-height: 1;
+  cursor: pointer;
+}
+.StatsIcon:hover {
+  color: white;
+  fill: white;
+  border-color: white;
+}
+.StatsIcon:hover .Icon {
+  fill: white; /* Change the fill color on hover */
 }
 .Icon {
   width: 1.5rem;
