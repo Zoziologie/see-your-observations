@@ -198,13 +198,13 @@ import * as bootstrap from "bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 import taxonomy from "./assets/eBird_taxonomy.json";
-const taxonomy_prim = taxonomy.reduce((acc, row) => {
-  acc[row["PRIMARY_COM_NAME"]] = row; // Add the row as the value under the key `PRIMARY_COM_NAME`
+const taxonomy_sci = taxonomy.reduce((acc, row) => {
+  acc[row["sciName"]] = row; // Add the row as the value under the key `sciName`
   return acc;
 }, {});
 
 const taxonomy_code = taxonomy.reduce((acc, row) => {
-  acc[row["SPECIES_CODE"]] = row; // Add the row as the value under the key `SPECIES_CODE`
+  acc[row["speciesCode"]] = row; // Add the row as the value under the key `speciesCode`
   return acc;
 }, {});
 
@@ -372,23 +372,17 @@ export default {
     processFileData(data) {
       const sightings = data
         .map((row) => {
-          const match = taxonomy_prim[row["Common Name"]];
-          let speciesID = row["Common Name"];
-          if (match) {
-            speciesID = match.REPORT_AS ? match.REPORT_AS : match.SPECIES_CODE;
-          } else {
-            console.log("No match for " + row["Common Name"]);
-          }
-          const match2 = taxonomy_code[speciesID];
-          let category = "species";
-          if (match2) {
-            category = match2.CATEGORY;
-          }
+          const sciName = row["Scientific Name"];
+          const match = taxonomy_sci[sciName];
+          const speciesID = match?.REPORT_AS || match?.speciesCode || sciName;
+          const match2 = taxonomy_code[speciesID] || { comName: row["Common Name"] };
+          const category = match2.CATEGORY || "species";
+
           return {
             checklistID: row["Submission ID"],
-            commonName: match2["PRIMARY_COM_NAME"],
-            category: category,
-            count: row["Count"] === "x" || row["Count"] === "X" ? 1 : parseFloat(row["Count"]),
+            commonName: match2.comName,
+            category,
+            count: row["Count"].toLowerCase?.() === "x" ? 1 : parseFloat(row["Count"]),
             locationID: row["Location ID"],
             location: row["Location"],
             latitude: parseFloat(row["Latitude"]),
